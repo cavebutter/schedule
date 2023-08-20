@@ -28,3 +28,19 @@ XLSX workbook with:
   * Time Slot
   * Home Team
   * Away Team
+
+## Development Approach
+* Classes for Games and Teams
+  * Games being combination of eligible game day, field, and time slot.  
+  * Teams having just name, counters for home games, away games, and total
+
+Create a list of all possible games, given tournament start, end, weekdays, and fields as Game objects
+
+Add a field to Game class:  Week #.  Want to make sure that teams cannot play more than x games per week.  
+
+Create home/away pairings equal to the number of games per team (passed as param).
+
+Before assigning pairings to Games, perform the following checks:
+* Teams play no more than x games per week
+* Teams play every other team before re-playing an opponent
+
