@@ -4,6 +4,10 @@ import datetime
 from dateutil.relativedelta import relativedelta
 from dateutil.parser import parse
 import calendar
+import csv
+
+day_games_only = [0,1,2,3,4]
+night_games_only = [5,6]
 
 
 class Game:
@@ -35,19 +39,62 @@ class Game:
 
 
 class Team:
-    def __init__(self, team_name, level=''):
+    def __init__(self, team_name: str, home_game_count: int = 0, away_game_count: int = 0, level: str = ''):
+        """
+
+        :param team_name: str
+        :param home_game_count: int.  Count of home games in the current tourney
+        :param away_game_count: int  Count of away games in the current tourney
+        :param level: str  The level of the team
+        """
         self.team_name = team_name
         self.level = level
-        self.game_count = self.home_game_count + self.away_game_count
-        self.home_game_count = 0
-        self.away_game_count = 0
+        #self.game_count = self.home_game_count + self.away_game_count
+        self.home_game_count = home_game_count
+        self.away_game_count = away_game_count
 
 
     def __str__(self):
-        if self.level == '':
+        if not self.level:
             return f'{self.team_name}'
         else:
             return f'{self.level} - {self.team_name}'
+
+
+
+def trim_sched(games):
+    """
+    Remove all Games from list that violate day or night game rule
+    :param games:
+    :return: games
+    """
+    for game in games:
+        day_of_week = parse(game.gameday).weekday()
+        if day_of_week in day_games_only and game.time_slot == 'Night':
+            games.remove(game)
+        if day_of_week in night_games_only and game.time_slot != 'Night':
+            games.remove(game)
+    return games
+
+def load_data(data_file):
+    """
+    Load data from CSV file
+    :param data_file: csv file
+    :return:
+    """
+    with open(data_file, 'r') as f:
+        reader = csv.reader(f)
+        data = [item for item in reader]
+    return data[0]
+
+def create_teams(teams_list):
+    """
+    Create list of Team objects from param
+    :param teams_list:
+    :return: list of Teams
+    """
+    teams = [Team(team) for team in teams_list]
+    return teams
 
 
 def create_games(start_date, end_date, gamedays, fields, time_slots):
@@ -80,6 +127,8 @@ def create_games(start_date, end_date, gamedays, fields, time_slots):
     games = list(it.product(fields, dates, time_slots))
     games_list = [Game(game[0],game[2], game[1]) for game in games]
     return games_list
+
+
 def groups(teams):
     """
     Create 2 equal sized groups of teams from a single list of teams.
@@ -97,6 +146,15 @@ def groups(teams):
     return grouped_teams
 
 
+def groups_two(teams):
+    """
+    Return all possible combinations of team pairs
+    :type teams: str
+    :param teams:
+    :return:
+    """
+    groups = list(it.combinations(teams,2))
+    return groups
 def eligible_game_days(tournament_start, tournament_end, game_days):
     """
     Given tournament start and end dates, return a list of game days as strings that fall between
