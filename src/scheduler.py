@@ -6,8 +6,8 @@ from dateutil.parser import parse
 import calendar
 import csv
 
-day_games_only = [0,1,2,3,4]
-night_games_only = [5,6]
+night_games_only = [0,1,2,3,4]
+day_games_only = [5,6]
 
 
 class Game:
@@ -20,7 +20,7 @@ class Game:
         self.week_no = 0
 
     def __str__(self):
-        return f'{self.gameday} - {self.field}'
+        return f'{self.gameday} - {self.time_slot} - {self.field}'
 
     def assign_week(self, start_date):
         """
@@ -68,12 +68,39 @@ def trim_sched(games):
     :param games:
     :return: games
     """
+    print(f'Original List: ')
+    for game in games:
+        print(game)
     for game in games:
         day_of_week = parse(game.gameday).weekday()
         if day_of_week in day_games_only and game.time_slot == 'Night':
             games.remove(game)
+    print(f'Removed Night games from Day Game Days: ')
+    for game in games:
+        print(game)
+    for game in games:
+        day_of_week = parse(game.gameday).weekday()
         if day_of_week in night_games_only and game.time_slot != 'Night':
             games.remove(game)
+    print(f'Removed Day games from Night Game Days: ')
+    for game in games:
+        print(game)
+
+    # print(f'Original List: ')
+    # for game in games:
+    #     print(game)
+    # for game in games:
+    #     day_of_week = parse(game.gameday).weekday()
+    #     if day_of_week in day_games_only and game.time_slot == 'Night':
+    #         games.remove(game)
+    # print(f'Removed Night games from Day Game Days: ')
+    # for game in games:
+    #     print(game)
+    #     if day_of_week in night_games_only and game.time_slot != 'Night':
+    #         games.remove(game)
+    # print(f'Removed Day games from Night Game Days: ')
+    # for game in games:
+    #     print(game)
     return games
 
 def load_data(data_file):
