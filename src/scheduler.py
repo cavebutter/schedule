@@ -1,13 +1,13 @@
-from prettytable import PrettyTable
 import itertools as it
 import datetime
 from dateutil.relativedelta import relativedelta
 from dateutil.parser import parse
-import calendar
 import csv
+import os.path
 
 night_games_only = [0,1,2,3,4]
 day_games_only = [5,6]
+games_per_team = 20
 
 
 class Game:
@@ -37,9 +37,21 @@ class Game:
         week_no = relativedelta(gameday, start).weeks
         self.week_no = week_no
 
+    def assign_teams_to_game(self, match: tuple):
+        """
+        Assign the first Team in the match tuple to the Home team in the Game.  Assign the second Team to Away.
+        :param match:
+        """
+        if not isinstance(match[0], Team) and isinstance(match[1], Team):
+            raise ValueError("Both elements of 'match' must be instances of the 'Team' class")
+        self.hometeam = match[0]
+        self.awayteam = match[1]
+        self.hometeam.increment_home_count()
+        self.awayteam.increment_away_count()
+
 
 class Team:
-    def __init__(self, team_name: str, home_game_count: int = 0, away_game_count: int = 0, level: str = ''):
+    def __init__(self, team_name: str, level: str, home_game_count: int = 0, away_game_count: int = 0):
         """
 
         :param team_name: str
@@ -47,61 +59,49 @@ class Team:
         :param away_game_count: int  Count of away games in the current tourney
         :param level: str  The level of the team
         """
+        if not team_name:
+            raise ValueError("team_name cannot be an empty string")
+        if not level:
+            raise ValueError('level cannot be an empty string')
         self.team_name = team_name
         self.level = level
-        #self.game_count = self.home_game_count + self.away_game_count
         self.home_game_count = home_game_count
         self.away_game_count = away_game_count
 
-
     def __str__(self):
-        if not self.level:
+        if self.level =='':
             return f'{self.team_name}'
         else:
             return f'{self.level} - {self.team_name}'
 
+    def increment_home_count(self):
+        """
+        Increments the home_game_count by 1.
+        :return:
+        """
+        self.home_game_count += 1
 
+    def increment_away_count(self):
+        """
+        Increments the home_game_count by 1.
+        :return:
+        """
+        self.away_game_count += 1
 
-def trim_sched(games):
+def trim_sched(games, day_games, night_games):
     """
     Remove all Games from list that violate day or night game rule
     :param games:
     :return: games
     """
-    print(f'Original List: ')
-    for game in games:
-        print(game)
     for game in games:
         day_of_week = parse(game.gameday).weekday()
-        if day_of_week in day_games_only and game.time_slot == 'Night':
+        if day_of_week in day_games and game.time_slot == 'Night':
             games.remove(game)
-    print(f'Removed Night games from Day Game Days: ')
-    for game in games:
-        print(game)
-    for game in games:
-        day_of_week = parse(game.gameday).weekday()
-        if day_of_week in night_games_only and game.time_slot != 'Night':
+        elif day_of_week in night_games and game.time_slot != 'Night':
             games.remove(game)
-    print(f'Removed Day games from Night Game Days: ')
-    for game in games:
-        print(game)
-
-    # print(f'Original List: ')
-    # for game in games:
-    #     print(game)
-    # for game in games:
-    #     day_of_week = parse(game.gameday).weekday()
-    #     if day_of_week in day_games_only and game.time_slot == 'Night':
-    #         games.remove(game)
-    # print(f'Removed Night games from Day Game Days: ')
-    # for game in games:
-    #     print(game)
-    #     if day_of_week in night_games_only and game.time_slot != 'Night':
-    #         games.remove(game)
-    # print(f'Removed Day games from Night Game Days: ')
-    # for game in games:
-    #     print(game)
     return games
+
 
 def load_data(data_file):
     """
@@ -109,20 +109,31 @@ def load_data(data_file):
     :param data_file: csv file
     :return:
     """
+    # TODO allow for creation of Team objects from file
     with open(data_file, 'r') as f:
         reader = csv.reader(f)
         data = [item for item in reader]
     return data[0]
 
-def create_teams(teams_list):
+
+def load_teams(data_file):
     """
-    Create list of Team objects from param
-    :param teams_list:
+    Read csv and return a list of Team objects
+    :param data_file:
     :return: list of Teams
     """
-    teams = [Team(team) for team in teams_list]
-    return teams
-
+    if not os.path.isfile(data_file):
+        raise FileNotFoundError(f"File {data_file} does not exist")
+    teams = []
+    with open(data_file, 'r') as f:
+        reader = csv.reader(f)
+        for item in reader:
+            if len(item) == 2:
+                team = Team(item[0], item[1])
+                teams.append(team)
+            else:
+                raise ValueError('CSV file was not formatted properly.  Requires exactly two fields: Name and Level')
+        return teams
 
 def create_games(start_date, end_date, gamedays, fields, time_slots):
     """
@@ -210,25 +221,31 @@ def eligible_game_days(tournament_start, tournament_end, game_days):
         tournament_start = tournament_start + datetime.timedelta(days=1)
     return days
 
-def create_schedule(teams, time_slots, fields, tournament_start, tournament_end, game_days, ngames):
+
+def create_schedule(games, teams, games_per_team, max_games_per_week):
     """
-    Generate a round-robin style schedule based on passed params.
-    :type ngames: int
-    :type game_days: int
-    :type tournament_end: datetime
-    :type tournament_start: datetime
-    :type fields: list
-    :type time_slots: list
-    :type teams: list
-    :param teams: List of teams participating in tournament
-    :param time_slots: Names of the timeslots for each game (e.g. Early, Late)
-    :param fields: Names of the fields available for use in the tournament
-    :param tournament_start: Calendar date for the start of the tournament.  Constrained by game_days
-    :param tournament_end: Calendar date for the end of the tournament.  Constrained by game_days
-    :param game_days: Numberical representation of days of the week eligible to play games.  Monday = 0
-    :param ngames: Number of games each time must play in the tournament
-    :return: TBD
+    Assign Home and Away Teams to a list of Games.
+
+    Assignment must obey the following rules:
+    * Teams must play exactly max_games_per_week Games
+    * Teams must play every team before they can face a team an additional time.  This is based on gameday.
+    * Teams must alternate between being Home and Away each time they face each other
+    :param games: list of trimmed Games
+    :param teams: List of Teams
+    :param games_per_team: Number of Games each Team will be assigned
+    :param max_games_per_week: Maximum number of Games each team can play per week_num
+    :return: Modified list of Games
     """
     pass
-
-
+    # i = 0 # game count
+    # j = 0 # team count
+    # for i in range(len(games)):
+    #     assign_teams_to_game(teams[j], games[i])
+    #     teams[j][0].home_game_count += 1
+    #     teams[j][1].away_game_count += 1
+    #     i += 1
+    #     j += 1
+    #     if j > len(teams) + 1:
+    #         j = 0
+    #     if i == games_per_team:
+    #         break
