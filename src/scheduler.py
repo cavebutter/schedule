@@ -1,3 +1,4 @@
+import os
 import itertools as it
 import datetime
 from dateutil.relativedelta import relativedelta
@@ -118,22 +119,44 @@ def load_data(data_file):
 
 def load_teams(data_file):
     """
-    Read csv and return a list of Team objects
+    Read csv and return a dict of Team objects. Key = level.  Value = list of teams
     :param data_file:
     :return: list of Teams
     """
     if not os.path.isfile(data_file):
         raise FileNotFoundError(f"File {data_file} does not exist")
-    teams = []
-    with open(data_file, 'r') as f:
+    teams_dict = {}
+    with open(data_file, 'r', newline='') as f:
         reader = csv.reader(f)
         for item in reader:
             if len(item) == 2:
                 team = Team(item[0], item[1])
-                teams.append(team)
+                if team.level not in teams_dict.keys():
+                    teams_dict[team.level] = [team]
+                else:
+                    teams_dict[team.level].append(team)
             else:
                 raise ValueError('CSV file was not formatted properly.  Requires exactly two fields: Name and Level')
-        return teams
+        return teams_dict
+    
+
+def load_matchups(data_file):
+    """
+       Read csv and return a dict associating the number of matchups each team will have to face every other team
+       at that league level.
+       :param data_file:
+       :return: list of Teams
+       """
+    if not os.path.isfile(data_file):
+        raise FileNotFoundError(f"File {data_file} does not exist")
+    matchups_dict = {}
+    with open(data_file, 'r', newline='') as f:
+        reader = csv.reader(f)
+        for row in reader:
+            if len(row) != 2 or not row[1].isdigit():
+                raise ValueError("Invalid data format in CSV file")
+            matchups_dict[row[0]] = int(row[1])
+        return matchups_dict
 
 def create_games(start_date, end_date, gamedays, fields, time_slots):
     """
@@ -193,6 +216,33 @@ def groups_two(teams):
     """
     groups = list(it.combinations(teams,2))
     return groups
+
+
+def groups_three(teams: dict, matchups: dict):
+    """
+    Return a list of tuples containing team level, home team, and away team.
+    teams dict will supply the home and away teams as well as league level.  Matches will only be made between teams
+    at the same level.  matchups dict will determine the number of times each pair will be created for each level.
+    At each level, there should be n * m * (n-1) games in total, where n = number of teams at the level and m = matchup
+    :param teams:
+    :param matchups:
+    :return: list
+    """
+    master_list = [] # initialize the master list for all matches across all levels
+    for key in teams.keys(): # Iterate over all levels
+        i = 1 # Counter for matchups
+        matches = matchups[key] # Set the number of matches per team pair
+        for i in range(matches):
+            games = it.combinations(teams[key],2) # Create match pairings for every Team in a level
+            for game in games:
+                if i % 2 == 0: # for odd iterations
+                    master_list.append(game) # add to master list
+                else:
+                    r_game = (game[1], game[0]) # switch order to change home/away
+                    master_list.append(r_game)
+            i += 1
+    return master_list
+
 def eligible_game_days(tournament_start, tournament_end, game_days):
     """
     Given tournament start and end dates, return a list of game days as strings that fall between
