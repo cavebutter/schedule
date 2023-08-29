@@ -8,7 +8,6 @@ import os.path
 
 night_games_only = [0,1,2,3,4]
 day_games_only = [5,6]
-games_per_team = 20
 
 
 class Game:
@@ -223,7 +222,7 @@ def groups_three(teams: dict, matchups: dict):
     Return a list of tuples containing team level, home team, and away team.
     teams dict will supply the home and away teams as well as league level.  Matches will only be made between teams
     at the same level.  matchups dict will determine the number of times each pair will be created for each level.
-    At each level, there should be n * m * (n-1) games in total, where n = number of teams at the level and m = matchup
+    At each level, there should be (n * m * (n-1)) / 2 games in total, where n = number of teams at the level and m = matchup
     :param teams:
     :param matchups:
     :return: list
