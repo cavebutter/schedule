@@ -88,7 +88,7 @@ class Team:
         """
         self.away_game_count += 1
 
-def trim_sched(games, day_games, night_games):
+def trim_sched(games:list, day_games:list, night_games:list):
     """
     Remove all Games from list that violate day or night game rule
     :param games:
@@ -111,7 +111,7 @@ def load_data(data_file):
     """
     # TODO allow for creation of Team objects from file
     with open(data_file, 'r') as f:
-        reader = csv.reader(f)
+        reader = csv.reader(f, skipinitialspace=True)
         data = [item for item in reader]
     return data[0]
 
@@ -126,7 +126,7 @@ def load_teams(data_file):
         raise FileNotFoundError(f"File {data_file} does not exist")
     teams_dict = {}
     with open(data_file, 'r', newline='') as f:
-        reader = csv.reader(f)
+        reader = csv.reader(f, skipinitialspace=True)
         for item in reader:
             if len(item) == 2:
                 team = Team(item[0], item[1])
@@ -150,7 +150,7 @@ def load_matchups(data_file):
         raise FileNotFoundError(f"File {data_file} does not exist")
     matchups_dict = {}
     with open(data_file, 'r', newline='') as f:
-        reader = csv.reader(f)
+        reader = csv.reader(f, skipinitialspace=True)
         for row in reader:
             if len(row) != 2 or not row[1].isdigit():
                 raise ValueError("Invalid data format in CSV file")
@@ -189,22 +189,16 @@ def create_games(start_date, end_date, gamedays, fields, time_slots):
     return games_list
 
 
-def groups(teams):
+def add_bye(teams:dict)->dict:
     """
-    Create 2 equal sized groups of teams from a single list of teams.
-    :type teams: list
+    For each level in the teams dict, if the number of teams is odd, add a Bye team.  Return the modified dict.
     :param teams:
-    :return: dict containing 2 lists
+    :return:
     """
-    if not isinstance(teams, list):
-        raise TypeError('teams must be a list.')
-    if len(teams) % 2 == 1:
-        teams.append('BYE')
-    mid = int(len(teams)//2)
-    l1, l2 = teams[:mid], teams[mid:]
-    grouped_teams = {'group1': l1, 'group2': l2}
-    return grouped_teams
-
+    for key in teams:
+        if len(teams[key]) % 2 == 1:
+            teams[key].append(Team('Bye', key))
+    return teams
 
 def groups_two(teams):
     """

@@ -3,46 +3,46 @@ from src.scheduler import *
 from collections import Counter
 import pytest
 
-class TestGroups:
-
-    #  Tests that the function can create 2 equal sized groups from a list of even length
-    def test_even_length_list(self):
-        # Arrange
-        teams = ['Team1', 'Team2', 'Team3', 'Team4']
-    
-        # Act
-        result = groups(teams)
-    
-        # Assert
-        assert len(result['group1']) == len(result['group2'])
-        assert len(result['group1']) == 2
-        assert len(result['group2']) == 2
-
-    #  Tests that the function can create 2 equal sized groups from a list of odd length
-    def test_odd_length_list(self):
-        # Arrange
-        teams = ['Team1', 'Team2', 'Team3']
-    
-        # Act
-        result = groups(teams)
-    
-        # Assert
-        assert len(result['group1']) == len(result['group2'])
-        assert len(result['group1']) == 2
-        assert len(result['group2']) == 2
-
-    #  Tests that the function can handle an empty list input
-    def test_empty_list(self):
-        # Arrange
-        teams = []
-    
-        # Act
-        result = groups(teams)
-    
-        # Assert
-        assert len(result['group1']) == len(result['group2'])
-        assert len(result['group1']) == 0
-        assert len(result['group2']) == 0
+# class TestGroups:
+#
+#     #  Tests that the function can create 2 equal sized groups from a list of even length
+#     def test_even_length_list(self):
+#         # Arrange
+#         teams = ['Team1', 'Team2', 'Team3', 'Team4']
+#
+#         # Act
+#         result = add_bye(teams)
+#
+#         # Assert
+#         assert len(result['group1']) == len(result['group2'])
+#         assert len(result['group1']) == 2
+#         assert len(result['group2']) == 2
+#
+#     #  Tests that the function can create 2 equal sized groups from a list of odd length
+#     def test_odd_length_list(self):
+#         # Arrange
+#         teams = ['Team1', 'Team2', 'Team3']
+#
+#         # Act
+#         result = add_bye(teams)
+#
+#         # Assert
+#         assert len(result['group1']) == len(result['group2'])
+#         assert len(result['group1']) == 2
+#         assert len(result['group2']) == 2
+#
+#     #  Tests that the function can handle an empty list input
+#     def test_empty_list(self):
+#         # Arrange
+#         teams = []
+#
+#         # Act
+#         result = add_bye(teams)
+#
+#         # Assert
+#         assert len(result['group1']) == len(result['group2'])
+#         assert len(result['group1']) == 0
+#         assert len(result['group2']) == 0
 
 
 
@@ -496,3 +496,40 @@ class TestGroupsThree:
 
         # Assert
         assert Counter(result) == Counter(expected_result)
+
+
+class TestAddBye:
+
+    #  Tests that the function correctly adds a Bye team for each level with an even number of teams
+    def test_even_teams(self):
+        # Arrange
+        teams = {
+            'level1': [Team('Team1', 'level1'), Team('Team2', 'level1')],
+            'level2': [Team('Team3', 'level2'), Team('Team4', 'level2')]
+        }
+
+        # Act
+        result = add_bye(teams)
+
+        # Assert
+        assert len(result['level1']) == 2
+        assert len(result['level2']) == 2
+        assert result['level1'][0].team_name == 'Team1'
+        assert result['level1'][1].team_name == 'Team2'
+        assert result['level2'][0].team_name == 'Team3'
+        assert result['level2'][1].team_name == 'Team4'
+
+    #  Tests that the function correctly adds a Bye team for each level with an odd number of teams
+    def test_odd_teams(self):
+        # Arrange
+        teams = {
+            'level1': [Team('Team1', 'level1'), Team('Team2', 'level1'), Team('Team3', 'level1')],
+            'level2': [Team('Team4', 'level2'), Team('Team5', 'level2')]
+        }
+
+        # Act
+        result = add_bye(teams)
+
+        # Assert
+        assert len(result['level1']) == 4
+        assert len(result['level2']) == 2
