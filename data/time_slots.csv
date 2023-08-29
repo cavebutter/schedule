@@ -1,1 +1,14 @@
-Early,Mid,Late,Night
+ts_name, duration_min, start_time, end_time, time_bet
+tb_early, 60, '08:00', '09:00', 30
+tb_mid, 60, '09:30', '10:30', 30
+tb_late, 60, '11:00', '12:30', 30
+low_minor_m1, 90, '09:00', '10:30', 30
+low_minor_m2, 90, '11:00', '12:30', 30
+low_minor_a1, 90, '13:00', '14:30', 30
+low_minor_a2, 90, '15:00', '16:30', 30
+low_minor_e1, 90, '17:00', '18:30', 30
+hi_minor_m1, 120, '09:00', '11:00', 30
+hi_minor_m2, 120, '11:30', '13:00', 30
+hi_minor_a1, 120, '13:30', '15:00', 30
+hi_minor_a2, 120, '15:30', '17:00', 30
+hi_minor_e1, 120, '17:30', '19:00', 30

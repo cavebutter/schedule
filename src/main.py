@@ -1,14 +1,16 @@
-import src.scheduler as s
+import src.games
+import src.general
+import src.teams as s
 
 if __name__ == '__main__':
 
     # TODO These would go in a config file rather than a data file?
 
     # Load data
-    teams = s.load_data('/Users/Jayco/projects/schedule/data/teams_even.csv')
-    time_slots = s.load_data('/Users/Jayco/projects/schedule/data/time_slots.csv')
-    fields = s.load_data('/Users/Jayco/projects/schedule/data/fields.csv')
-    gamedays = s.load_data('/Users/Jayco/projects/schedule/data/gamedays.csv')
+    teams = src.general.load_data('/Users/Jayco/projects/schedule/data/teams_even.csv')
+    time_slots = src.general.load_data('/Users/Jayco/projects/schedule/data/time_slots.csv')
+    fields = src.general.load_data('/Users/Jayco/projects/schedule/data/fields.csv')
+    gamedays = src.general.load_data('/Users/Jayco/projects/schedule/data/gamedays.csv')
     gamedays = [int(day) for day in gamedays]
 
     #  TODO better way to intake these params
@@ -21,10 +23,10 @@ if __name__ == '__main__':
     games_per_team = 20
 
     # Create list of all possible games
-    games = s.create_games(tourney_start, tourney_end, gamedays, fields, time_slots)
+    games = src.games.create_games(tourney_start, tourney_end, gamedays, fields, time_slots)
 
     # Trim games to include only valid day-timeslog combinations
-    games = s.trim_sched(games, day_games_only, night_games_only)
+    games = src.games.trim_sched(games, day_games_only, night_games_only)
 
     # Assign week numbers to trimmed list
     for game in games:
