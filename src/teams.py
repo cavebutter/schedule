@@ -2,6 +2,7 @@ import os
 import itertools as it
 import csv
 import os.path
+from peewee import *
 
 night_games_only = [0,1,2,3,4]
 day_games_only = [5,6]
@@ -90,15 +91,20 @@ def load_matchups(data_file):
         return matchups_dict
 
 
-def add_bye(teams:dict)->dict:
+def add_bye(teams:list, level):
     """
-    For each level in the teams dict, if the number of teams is odd, add a Bye team.  Return the modified dict.
+    Modified for ORM usage.  Add a Bye to Team table if there are odd number of teams
     :param teams:
     :return:
     """
-    for key in teams:
-        if len(teams[key]) % 2 == 1:
-            teams[key].append(Team('Bye', key))
+    if len(teams) % 2 == 1:
+        bye = Team(name='Bye', level=level)
+        bye.save()
+        new_teams = Team.select().where(Team.level == level)
+        if len(new_teams) % 2 == 1:
+            raise ValueError("Odd number of teams in level")
+        else:
+            return new_teams
     return teams
 
 def groups_two(teams):
